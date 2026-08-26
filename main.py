@@ -128,19 +128,19 @@ async def send_page(chat_id, user_tg_id, page):
     await bot.send_message(chat_id, f"Страница {page}", reply_markup=kb_page)
 
 @dp.callback_query(F.data.startswith('page_'))
-async def paginate(call: types.CallbackQuery):
-    data = call.data.split('_')
+async def paginate(callback: types.CallbackQuery):
+    data = callback.data.split('_')
     page = int(data[1])
-    await call.message.delete()
-    await send_page(call.message.chat.id, call.from_user.id, page)
+    await callback.message.delete()
+    await send_page(callback.message.chat.id, callback.from_user.id, page)
 
 @dp.callback_query(F.data.startswith('delete_'))
-async def del_product(call: types.CallbackQuery):
-    data = call.data.split('_')
+async def del_product(callback: types.CallbackQuery):
+    data = callback.data.split('_')
     product_id = int(data[1])
     delete_product(product_id)
-    await call.message.delete()
-    await call.answer("Товар удален")
+    await callback.message.delete()
+    await callback.answer("Товар удален")
 
 @dp.message(F.text == '🔎 Поиск')
 async def search(message: types.Message, state: FSMContext):
@@ -171,12 +171,12 @@ async def get_search_code(message: types.Message, state: FSMContext):
         await message.answer('Товар не найден')
 
 @dp.callback_query(F.data.startswith('add_'))
-async def cart_add(call: types.CallbackQuery):
-    data = call.data.split('_')
+async def cart_add(callback: types.CallbackQuery):
+    data = callback.data.split('_')
     product_id = int(data[1])
-    user_id = get_id(call.from_user.id)
+    user_id = get_id(callback.from_user.id)
     add_to_cart(user_id, product_id)
-    await call.answer("Товар в корзине")
+    await callback.answer("Товар в корзине")
 
 @dp.message(F.text == '🧺 Корзина')
 async def show_cart(message: types.Message):
@@ -215,17 +215,17 @@ async def show_cart(message: types.Message):
     await message.answer(text, reply_markup=kb)
 
 @dp.callback_query(F.data == 'clear_cart')
-async def clear_cart_handler(call: types.CallbackQuery):
-    user_id = get_id(call.from_user.id)
+async def clear_cart_handler(callback: types.CallbackQuery):
+    user_id = get_id(callback.from_user.id)
     clear_cart(user_id)
-    await call.message.edit_text("Корзина очищена")
+    await callback.message.edit_text("Корзина очищена")
 
 @dp.callback_query(F.data == 'make_order')
-async def make_order(call: types.CallbackQuery, state: FSMContext):
+async def make_order(callback: types.CallbackQuery, state: FSMContext):
     kb = ReplyKeyboardMarkup(keyboard=[
         [KeyboardButton(text='🚚 Доставка'), KeyboardButton(text='🏬 Самовывоз')]
     ], resize_keyboard=True)
-    await call.message.answer('Выберите тип доставки', reply_markup=kb)
+    await callback.message.answer('Выберите тип доставки', reply_markup=kb)
     await state.set_state(OrderState.delivery_type)
 
 @dp.message(OrderState.delivery_type)
@@ -313,13 +313,13 @@ async def admin_orders(message: types.Message):
         await message.answer(text, reply_markup=kb)
 
 @dp.callback_query(F.data.startswith('status_'))
-async def change_status(call: types.CallbackQuery):
-    data = call.data.split('_')
+async def change_status(callback: types.CallbackQuery):
+    data = callback.data.split('_')
     status = data[1]
     order_id = int(data[2])
     
     update_order_status(order_id, status)
-    await call.message.edit_text(f"Статус заказа {order_id} изменен на {status}")
+    await callback.message.edit_text(f"Статус заказа {order_id} изменен на {status}")
 
 async def main():
     await dp.start_polling(bot)
